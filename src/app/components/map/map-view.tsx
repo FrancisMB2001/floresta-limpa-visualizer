@@ -78,11 +78,11 @@ export default function MapView({ selectedFuelBreak, onBack }: MapViewProps) {
 
   const handleCreateNetCDF = async ({ startDate, endDate }: NetCDFParams) => {
     if (!selectedArea || !startDate || !endDate) {
-      toast.error("Please select an area and date range.");
+      toast.error("Por favor, selecione uma área e período temporal.");
       return;
     }
 
-    const toastId = toast.loading("Creating NetCDF file...");
+    const toastId = toast.loading("Submissão de pedido de criação NetCDF...");
 
     try {
       console.log("Creating NetCDF with params:", {
@@ -99,10 +99,10 @@ export default function MapView({ selectedFuelBreak, onBack }: MapViewProps) {
       });
 
       toast.success(
-        `NetCDF task submitted successfully! JobId - ${job.data?.jobId}`,
+        `Tarefa de criação NetCDF submitida com sucesso, com ID: ${job.data?.jobId}`,
         { id: toastId, duration: 5000 }
       );
-      console.log("Job Started:", job);
+      console.log("job:", job);
 
       if (job.data?.jobId) {
         pollJobStatus(job.data.jobId);
@@ -110,7 +110,7 @@ export default function MapView({ selectedFuelBreak, onBack }: MapViewProps) {
         throw new Error("Job ID not found in response");
       }
     } catch (error) {
-      toast.error("Failed to create NetCDF.", { id: toastId });
+      toast.error("Erro ao criar ficheiro NetCDF.", { id: toastId });
       console.error("NetCDF creation error:", error);
     }
   };
@@ -126,7 +126,7 @@ export default function MapView({ selectedFuelBreak, onBack }: MapViewProps) {
           (t) => (
             <div className="bg-white dark:bg-gray-900 rounded shadow px-4 py-3 flex items-center gap-3">
               <span>
-                NetCDF job completed!{" "}
+                Ficheiro NetCDF pronto para descarregar!{" "}
                 <a
                   href={
                     statusResp.data!.downloadUrl!.startsWith("http")
