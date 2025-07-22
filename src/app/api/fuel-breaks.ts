@@ -1,6 +1,3 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { FuelBreak } from '../types/fuelbreak';
-
 export async function fetchFuelBreak(stacApiUrl: string, collectionId: string) {
   const response = await fetch(`${stacApiUrl}/collections/${collectionId}/items`);
   const data = await response.json();

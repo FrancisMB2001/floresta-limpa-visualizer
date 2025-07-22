@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -p 7010",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 7010",
     "lint": "next lint",
     "openapi": "npx @hey-api/openapi-ts -i http://91.134.84.183/api/swagger.json -o src/client -c @hey-api/client-next"
   },

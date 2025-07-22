@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { FuelBreakCard } from "../components/fuel-break-card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 import { FuelBreak } from "../types/fuelbreak";
 
 interface FuelBreaksGridProps {
