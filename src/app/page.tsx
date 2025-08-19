@@ -172,7 +172,7 @@ export default function Home() {
           selectedFuelBreak={selectedFuelBreak}
           onBack={handleBackToGrid}
         />
-      ) : (
+      ) : ( 
         <FuelBreaksGrid fuelBreaks={fuelBreaks} onViewMap={handleViewMap} />
       )}
 
