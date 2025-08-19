@@ -6,7 +6,7 @@ import { FuelBreak } from "../../types/fuelbreak";
 import L from "leaflet";
 import "leaflet-draw";
 import { Client } from "@/client/client";
-import { getJobStatus, getNetCdfIndexes } from "@/client";
+import { getJobStatus, generateTimeSeriesIndexFile } from "@/client";
 import toast, { Toaster } from "react-hot-toast";
 import { X } from "lucide-react";
 
@@ -90,8 +90,9 @@ export default function MapView({ selectedFuelBreak, onBack }: MapViewProps) {
         startTime: startDate.toISOString(),
         endTime: endDate.toISOString(),
       });
-      const job = await getNetCdfIndexes({
+      const job = await generateTimeSeriesIndexFile({
         body: {
+          fileType: "netcdf",
           location: selectedArea.geometry,
           startTime: startDate.toISOString(),
           endTime: endDate.toISOString(),
