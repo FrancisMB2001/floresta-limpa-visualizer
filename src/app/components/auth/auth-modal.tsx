@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { login, register } from "@/client"; // adjust import path if needed
-import type { LoginResponse } from "@/client"; // type from your OpenAPI client
+import { login, register } from "@/client"; 
+import type { LoginResponse } from "@/client";
+import { setAuthToken } from "@/app/auth";
 
 interface AuthModalProps {
   onClose: () => void;
@@ -17,33 +18,37 @@ export default function AuthModal({ onClose, onLogin }: AuthModalProps) {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
 
-    try {
-      if (isLogin) {
-        // 🔑 Login with API client
-        const resp = await login({
-          body: { username: email, password },
-        });
-        onLogin(resp.data!);
-      } else {
-        // 📝 Register with API client
-        const resp = await register({
-          body: { email, password },
-        });
-        onLogin(resp.data!);
-      }
+  try {
+    if (isLogin) {
+      const resp = await login({
+        body: { username: email, password },
+      });
 
-      onClose();
-    } catch (err: any) {
-      console.error("Auth error:", err);
-      setError("Falha ao autenticar. Verifique os dados e tente novamente.");
-    } finally {
-      setLoading(false);
+      const token = resp.data!.token;
+      setAuthToken(token);
+      onLogin(resp.data!);
+    } else {
+      const resp = await register({
+        body: { email, password },
+      });
+
+      const token = resp.data!.token;
+      setAuthToken(token);
+      onLogin(resp.data!);
     }
-  };
+
+    onClose();
+  } catch (err: any) {
+    console.error("Auth error:", err);
+    setError("Falha ao autenticar. Verifique os dados e tente novamente.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center">

@@ -10,6 +10,7 @@ import {
   LoginResponse,
 } from "@/client";
 import AuthModal from "./components/auth/auth-modal";
+import { clearAuthToken, setAuthToken } from "./auth";
 
 client.setConfig({
   baseUrl: "http://91.134.84.183/api/",
@@ -27,11 +28,29 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [mapLoading, setMapLoading] = useState(false);
 
-  // 🔹 Auth state
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [user, setUser] = useState<LoginResponse | null>(null);
 
-  const handleLogout = () => setUser(null);
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      setAuthToken(token); // configure client
+      // optionally fetch user info here
+    }
+  }, []);
+
+  const handleLogout = () => {
+    setUser(null);
+    clearAuthToken();
+  };
+
+  const handleLogin = (data: LoginResponse) => {
+    setUser(data);
+    if (data.token) {
+      setAuthToken(data.token);
+      localStorage.setItem("authToken", data.token);
+    }
+  };
 
   useEffect(() => {
     fetchFuelBreaks();
@@ -40,13 +59,9 @@ export default function Home() {
   const fetchFuelBreaks = async () => {
     try {
       const response = await getFuelBreaksFromStac({
-        query: {
-          view: "no_geometry",
-        },
+        query: { view: "no_geometry" },
       });
-      if (!response.data) {
-        throw new Error("No fuel breaks found");
-      }
+      if (!response.data) throw new Error("No fuel breaks found");
       const data = response.data.map((item: any) => new FuelBreak(item));
       setFuelBreaks(data);
     } catch (error) {
@@ -55,6 +70,7 @@ export default function Home() {
       setLoading(false);
     }
   };
+
 
   const handleViewMap = async (fuelBreak: FuelBreak) => {
     setMapLoading(true);
@@ -150,7 +166,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* 🔹 Content */}
+      {/* Content */}
       {selectedFuelBreak ? (
         <MapView
           selectedFuelBreak={selectedFuelBreak}
@@ -160,7 +176,7 @@ export default function Home() {
         <FuelBreaksGrid fuelBreaks={fuelBreaks} onViewMap={handleViewMap} />
       )}
 
-      {/* 🔹 Auth Modal */}
+      {/* Auth Modal */}
       <div className="relative z-[1000]">
         {isAuthOpen && (
           <AuthModal onClose={() => setIsAuthOpen(false)} onLogin={setUser} />
