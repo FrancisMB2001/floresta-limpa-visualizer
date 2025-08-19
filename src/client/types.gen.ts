@@ -87,12 +87,29 @@ export type JobEntry = {
     downloadUrl: string | null;
     startedAt: string;
     completedAt: string | null;
+    agent: string | null;
 };
 
 export type NotFoundResponse = {
     message: string;
     details: {
         jobId: string;
+    };
+};
+
+export type RequestJobEntry = {
+    description: string | null;
+    agent: string | null;
+};
+
+export type NodeJsReadableStream = {
+    readable: boolean;
+};
+
+export type UnauthorizedResponse = {
+    message: string;
+    details?: {
+        error?: unknown;
     };
 };
 
@@ -103,7 +120,10 @@ export type OutOfBoundariesResponse = {
     };
 };
 
-export type NetCdfRequest = {
+export type TimeSeriesFileType = 'netcdf' | 'tiff' | 'geopackge' | 'shapefile';
+
+export type TimeSeriesFileRequest = {
+    fileType: TimeSeriesFileType;
     /**
      * Start time for data filtering
      */
@@ -117,6 +137,56 @@ export type NetCdfRequest = {
      * Coordinate reference system (optional)
      */
     crs?: string;
+};
+
+export type DetailedFuelBreak = {
+    spatialObjectId: number;
+    code: number;
+    sectionCode: number;
+    fuelBreakType: {
+        structure: string;
+        fuel: string;
+        network: string;
+        id: number;
+    };
+    spatialObject: {
+        boundingBox: SimpleGeoJson;
+        limits: SimpleGeoJson;
+        observations: string;
+        coverage: string;
+        area: number;
+    };
+    responsibleEntityId: number;
+    responsibleEntityName: string;
+};
+
+export type UserInfo = {
+    account_id: number;
+    entity_id?: number;
+    account_username: string;
+    account_email: string;
+    account_accepted: boolean;
+    account_blocked: boolean;
+    account_active: boolean;
+    account_properties?: unknown;
+    created_at?: string;
+    role_id: number;
+    role: string;
+};
+
+export type LoginResponse = {
+    token: string;
+    user: UserInfo;
+};
+
+export type LoginRequest = {
+    username: string;
+    password: string;
+};
+
+export type RegisterRequest = {
+    email: string;
+    password: string;
 };
 
 export type GetSegmentsFromStacData = {
@@ -232,6 +302,31 @@ export type GetFuelBreakFromStacByIdResponses = {
 
 export type GetFuelBreakFromStacByIdResponse = GetFuelBreakFromStacByIdResponses[keyof GetFuelBreakFromStacByIdResponses];
 
+export type DeleteJobData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/jobs/{id}';
+};
+
+export type DeleteJobErrors = {
+    /**
+     * No existing job found with provided id
+     */
+    404: unknown;
+};
+
+export type DeleteJobResponses = {
+    /**
+     * Job sucessfuly deleted
+     */
+    204: void;
+};
+
+export type DeleteJobResponse = DeleteJobResponses[keyof DeleteJobResponses];
+
 export type GetJobStatusData = {
     body?: never;
     path: {
@@ -259,14 +354,109 @@ export type GetJobStatusResponses = {
 
 export type GetJobStatusResponse = GetJobStatusResponses[keyof GetJobStatusResponses];
 
-export type GetNetCdfIndexesData = {
-    body: NetCdfRequest;
-    path?: never;
+export type PutJobData = {
+    body: JobEntry;
+    path: {
+        id: string;
+    };
     query?: never;
-    url: '/indexes/netcdf';
+    url: '/jobs/{id}';
 };
 
-export type GetNetCdfIndexesErrors = {
+export type PutJobErrors = {
+    /**
+     * No existing job found with provided id
+     */
+    404: unknown;
+    /**
+     * Conflict with different existing job
+     */
+    409: unknown;
+};
+
+export type PutJobResponses = {
+    /**
+     * Job sucessfuly updated
+     */
+    200: JobEntry;
+};
+
+export type PutJobResponse = PutJobResponses[keyof PutJobResponses];
+
+export type GetJobsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/jobs';
+};
+
+export type GetJobsResponses = {
+    /**
+     * All jobs returned
+     */
+    200: Array<JobEntry>;
+};
+
+export type GetJobsResponse = GetJobsResponses[keyof GetJobsResponses];
+
+export type PostJobData = {
+    body: RequestJobEntry;
+    path?: never;
+    query?: never;
+    url: '/jobs';
+};
+
+export type PostJobResponses = {
+    /**
+     * New job created
+     */
+    201: JobEntry;
+};
+
+export type PostJobResponse = PostJobResponses[keyof PostJobResponses];
+
+export type GetTimeSeriesIndexFileData = {
+    body?: never;
+    path: {
+        /**
+         * Id of the file, same as the job id of the file request.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/time-series-datasets/{id}';
+};
+
+export type GetTimeSeriesIndexFileErrors = {
+    /**
+     * Not Found
+     */
+    404: _Error;
+};
+
+export type GetTimeSeriesIndexFileError = GetTimeSeriesIndexFileErrors[keyof GetTimeSeriesIndexFileErrors];
+
+export type GetTimeSeriesIndexFileResponses = {
+    /**
+     * File download
+     */
+    200: NodeJsReadableStream;
+};
+
+export type GetTimeSeriesIndexFileResponse = GetTimeSeriesIndexFileResponses[keyof GetTimeSeriesIndexFileResponses];
+
+export type GenerateTimeSeriesIndexFileData = {
+    body: TimeSeriesFileRequest;
+    path?: never;
+    query?: never;
+    url: '/time-series-datasets';
+};
+
+export type GenerateTimeSeriesIndexFileErrors = {
+    /**
+     * Unathorized
+     */
+    401: UnauthorizedResponse;
     /**
      * Location out of boundaries
      */
@@ -281,11 +471,11 @@ export type GetNetCdfIndexesErrors = {
     500: _Error;
 };
 
-export type GetNetCdfIndexesError = GetNetCdfIndexesErrors[keyof GetNetCdfIndexesErrors];
+export type GenerateTimeSeriesIndexFileError = GenerateTimeSeriesIndexFileErrors[keyof GenerateTimeSeriesIndexFileErrors];
 
-export type GetNetCdfIndexesResponses = {
+export type GenerateTimeSeriesIndexFileResponses = {
     /**
-     * NetCDF Job Created
+     * Time series generation process started.
      */
     200: {
         message: string;
@@ -294,7 +484,100 @@ export type GetNetCdfIndexesResponses = {
     };
 };
 
-export type GetNetCdfIndexesResponse = GetNetCdfIndexesResponses[keyof GetNetCdfIndexesResponses];
+export type GenerateTimeSeriesIndexFileResponse = GenerateTimeSeriesIndexFileResponses[keyof GenerateTimeSeriesIndexFileResponses];
+
+export type GetFuelBreaksDetailedData = {
+    body?: never;
+    path?: never;
+    query?: {
+        periodType?: string;
+        periodTime?: string;
+        fuelBreakTypeNetwork?: string;
+        fuelBreakTypeId?: string;
+        location?: string;
+        predictedState?: string;
+        observedState?: string;
+        responsibleEntity?: string;
+        page?: number;
+        limit?: number;
+    };
+    url: '/fuel-breaks-detailed';
+};
+
+export type GetFuelBreaksDetailedResponses = {
+    /**
+     * Success
+     */
+    200: Array<DetailedFuelBreak>;
+};
+
+export type GetFuelBreaksDetailedResponse = GetFuelBreaksDetailedResponses[keyof GetFuelBreaksDetailedResponses];
+
+export type GetFuelBreakDetailedByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/fuel-breaks-detailed/{id}';
+};
+
+export type GetFuelBreakDetailedByIdErrors = {
+    /**
+     * Job not found
+     */
+    404: NotFoundResponse;
+};
+
+export type GetFuelBreakDetailedByIdError = GetFuelBreakDetailedByIdErrors[keyof GetFuelBreakDetailedByIdErrors];
+
+export type GetFuelBreakDetailedByIdResponses = {
+    /**
+     * Success
+     */
+    200: DetailedFuelBreak;
+};
+
+export type GetFuelBreakDetailedByIdResponse = GetFuelBreakDetailedByIdResponses[keyof GetFuelBreakDetailedByIdResponses];
+
+export type LoginData = {
+    body: LoginRequest;
+    path?: never;
+    query?: never;
+    url: '/auth/login';
+};
+
+export type LoginErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+};
+
+export type LoginResponses = {
+    /**
+     * Ok
+     */
+    200: LoginResponse;
+};
+
+export type LoginResponse2 = LoginResponses[keyof LoginResponses];
+
+export type RegisterData = {
+    body: RegisterRequest;
+    path?: never;
+    query?: never;
+    url: '/auth/register';
+};
+
+export type RegisterResponses = {
+    /**
+     * Ok
+     */
+    200: LoginResponse;
+};
+
+export type RegisterResponse = RegisterResponses[keyof RegisterResponses];
 
 export type ClientOptions = {
     baseUrl: 'http://91.134.84.183/api' | (string & {});
