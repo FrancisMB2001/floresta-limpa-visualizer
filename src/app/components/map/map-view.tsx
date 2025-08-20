@@ -6,9 +6,10 @@ import { FuelBreak } from "../../types/fuelbreak";
 import L from "leaflet";
 import "leaflet-draw";
 import { Client } from "@/client/client";
-import { getJobStatus, generateTimeSeriesIndexFile } from "@/client";
+import { getJobStatus, generateTimeSeriesIndexFile, getTimeSeriesIndexFile } from "@/client";
 import toast, { Toaster } from "react-hot-toast";
 import { X } from "lucide-react";
+import { getAuthToken } from "@/app/auth";
 
 const POLL_INTERVAL = Number(process.env.POLL_INTERVAL) || 3000;
 
@@ -116,6 +117,73 @@ export default function MapView({ selectedFuelBreak, onBack }: MapViewProps) {
     }
   };
 
+  const downloadFile = async (jobId: string) => {
+    try {
+      /*
+      const response = await getTimeSeriesIndexFile(
+        { path: { id: jobId }, parseAs: "blob" }
+      );
+
+      if (response.error || !response.data) {
+        console.error('Failed to download file', response.error);
+        return;
+      };
+
+      const blob = (response.data as any) as Blob;
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `timeseries-${jobId}.nc`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast.dismiss();
+      toast.success("File downloaded!");
+      */
+      toast.loading("Realizando Download...");
+      const authToken = getAuthToken();
+
+      const response = await fetch(`http://91.134.84.183/api/time-series-datasets/${jobId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+
+      let filename = `timeseries-${jobId}.nc`;
+      const contentDisposition = response.headers.get('content-disposition');
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (match) {
+          filename = match[1].replace(/['"]/g, '');
+        }
+      }
+
+      // Create and trigger download
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link); // Append to body for better browser compatibility
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.dismiss();
+      toast.success("File downloaded!");
+    } catch (err) {
+      console.error('Download failed:', err);
+    }
+  };
+
+
   const pollJobStatus = async (jobId: string) => {
     try {
       const statusResp = await getJobStatus({ path: { id: jobId } });
@@ -125,6 +193,7 @@ export default function MapView({ selectedFuelBreak, onBack }: MapViewProps) {
       } else if (status === "done") {
         toast.custom(
           (t) => (
+            /*
             <div className="bg-white dark:bg-gray-900 rounded shadow px-4 py-3 flex items-center gap-3">
               <span>
                 Ficheiro NetCDF pronto para descarregar!{" "}
@@ -150,16 +219,38 @@ export default function MapView({ selectedFuelBreak, onBack }: MapViewProps) {
                 <X className="w-4 h-4" />
               </button>
             </div>
+            */
+            <div className="bg-white dark:bg-gray-900 rounded shadow px-4 py-3 flex items-center gap-3">
+              <span>
+                Ficheiro NetCDF pronto para descarregar!{" "}
+                <button
+                  onClick={() => {
+                    downloadFile(jobId);
+                    toast.dismiss(t.id);
+                  }}
+                  className="underline text-blue-600 hover:text-blue-800"
+                >
+                  Download
+                </button>
+              </span>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="ml-2 text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                aria-label="Dismiss"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           ),
           { duration: Infinity }
         );
       } else if (status === "error") {
         toast.error("NetCDF job failed.");
       } else {
-        toast("NetCDF job status: " + status);
+        toast("Estado da geração de ficheiro: " + status);
       }
     } catch (err) {
-      toast.error("Failed to check job status.");
+      toast.error("Falha ao verificar estado da tarefa.");
     }
   };
 
