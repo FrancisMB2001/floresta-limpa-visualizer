@@ -27,17 +27,11 @@ export default function AuthModal({ onClose, onLogin }: AuthModalProps) {
       const resp = await login({
         body: { username: email, password },
       });
-
-      const token = resp.data!.token;
-      setAuthToken(token);
       onLogin(resp.data!);
     } else {
       const resp = await register({
         body: { email, password },
       });
-
-      const token = resp.data!.token;
-      setAuthToken(token);
       onLogin(resp.data!);
     }
 

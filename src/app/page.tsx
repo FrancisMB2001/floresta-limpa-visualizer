@@ -33,9 +33,13 @@ export default function Home() {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
+    const savedUser = localStorage.getItem("user");
+
     if (token) {
-      setAuthToken(token); // configure client
-      // optionally fetch user info here
+      setAuthToken(token);
+    }
+    if (savedUser && token) {
+      setUser({ token, user: JSON.parse(savedUser) });
     }
   }, []);
 
@@ -46,9 +50,11 @@ export default function Home() {
 
   const handleLogin = (data: LoginResponse) => {
     setUser(data);
+
     if (data.token) {
       setAuthToken(data.token);
       localStorage.setItem("authToken", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
     }
   };
 
@@ -172,14 +178,16 @@ export default function Home() {
           selectedFuelBreak={selectedFuelBreak}
           onBack={handleBackToGrid}
         />
-      ) : ( 
+      ) : (
         <FuelBreaksGrid fuelBreaks={fuelBreaks} onViewMap={handleViewMap} />
       )}
 
       {/* Auth Modal */}
       <div className="relative z-[1000]">
         {isAuthOpen && (
-          <AuthModal onClose={() => setIsAuthOpen(false)} onLogin={setUser} />
+          <AuthModal onClose={() => setIsAuthOpen(false)}
+            // onLogin={setUser} 
+            onLogin={handleLogin} />
         )}
       </div>
     </div>
